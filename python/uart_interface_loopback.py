@@ -4,17 +4,24 @@ import serial
 import glob
 from typing import List
 
+#######################
+
+DEFAULT_PORT= None
+DEFAULT_BAUDRATE = 115200
+
+#######################
+
 TITLE = """
   _____ _     _____ ____      _   _       _  _    ___   ___  
  | ____| |   | ____/ ___|    | | | |     | || |  / _ \ / _ \ 
  |  _| | |   |  _|| |   _____| |_| |_____| || |_| | | | (_) |
  | |___| |___| |__| |__|_____|  _  |_____|__   _| |_| |\__, |
  |_____|_____|_____\____|    |_| |_|        |_|  \___/   /_/
-           _   ___ ___   ___          _        _   
-          /_\ | __/ __| | _ \_ _ ___ (_)___ __| |_ 
-         / _ \| _|\__ \ |  _/ '_/ _ \| / -_) _|  _|
-        /_/ \_\___|___/ |_| |_| \___// \___\__|\__|
-                                   |__/           
+         _   ___ ___   ___          _        _   
+        /_\ | __/ __| | _ \_ _ ___ (_)___ __| |_ 
+       / _ \| _|\__ \ |  _/ '_/ _ \| / -_) _|  _|
+      /_/ \_\___|___/ |_| |_| \___// \___\__|\__|
+                                 |__/           
 """
 
 def serial_ports() -> List[str]:
@@ -51,6 +58,10 @@ def serial_port_menu() -> str:
     while len(available_ports) == 0:
         input("No serial port available. Make sure to connect to device then press enter to try again")
         available_ports = serial_ports()
+    if len(available_ports) == 1:
+        port = available_ports[0]
+        print(f'Using only available port "{port}"')
+        return port
     while True:
         print("Choose a serial port:")
         for i, port in enumerate(available_ports):
@@ -66,64 +77,59 @@ def serial_port_menu() -> str:
             except IndexError:
                 print(f"{resp} is out of range, try again !")
                 
-def baudrate_menu() -> str:
+def baudrate_menu() -> int:
     while True:
-        print("Choose a baudrate (leave empty for 230400 by default):")
+        print("Choose a baudrate:")
         try:
-            resp = input("")
-            if resp == "":
-                resp = 230400
-            else:
-                resp = int(resp)
+            resp = int(input(""))
         except ValueError:
             print("Wrong reponse type, try again !")
         else:
             return resp
-        
-def divide_chunks(data: bytes, chunk_size: int) -> List[bytes]:
-    chunks = []
-    for i in range(0, len(data), chunk_size): 
-        chunks.append(data[i:i + chunk_size])
-    return chunks
-        
-def write_chunk(chunk: bytes, port: str, baudrate: int):
-    with serial.Serial(port, baudrate) as ser:
-        time.sleep(0.1)
-        for i in range(len(chunk)):
-            ser.write(chunk[i])
-        for _ in range(i+1, 16):
-            ser.write(b'0')
-            
-def read_chunk(port: str, baudrate: int) -> bytes:
-    with serial.Serial(port, baudrate) as ser:
-        time.sleep(0.1)
-        chunk = ser.read(size=16)
-    return chunk
 
-
-if __name__ == "__main__":
-    
+def main(input_bytes: bytes) -> bytes:
     print(TITLE)
 
-    port = serial_port_menu()
-    print("\n")
-    baudrate = baudrate_menu()
-    print("\n")
+    if DEFAULT_PORT:
+        if DEFAULT_PORT in serial_ports():
+            print(f"Using default serial port: {DEFAULT_PORT}")
+            port = DEFAULT_PORT
+        else:
+            print(f"Default serial port is not available.")
+            port = serial_port_menu()
+    else:
+        print(f"Default serial port is not set.")
+        port = serial_port_menu()
+    if DEFAULT_BAUDRATE:
+        print(f"Using default baudrate: {DEFAULT_BAUDRATE}")
+        baudrate = DEFAULT_BAUDRATE
+    else:
+        print(f"Default baudrate is not set.")
+        baudrate = baudrate_menu()
     print("\n")
 
-    while True:
-        input_text = str(input("Text to send ?\n"))
-        input_bytes = input_text.encode()
-        print(f"Encoded text: {input_bytes.hex()}")
-        input_chunks = divide_chunks(input_bytes, 16)
-        print(f"{len(input_chunks)} chunk(s) to send")
-        output_chunks: List[bytes] = []
-        for i,current_chunk in enumerate(input_chunks):
-            print(f"Sending chunk {i}: {current_chunk.hex()}", end=" -> ")
-            write_chunk(current_chunk, port, baudrate)
-            current_chunk = read_chunk(port, baudrate)
-            output_chunks.append(current_chunk)
-            print(f"{current_chunk.hex()}")
-        output_text = "".join([b.decode() for b in output_chunks])[:len(input_text)]
-        print(f'Output text:\n"{output_text}"')
-        print("\n\n")
+    with serial.Serial(port, baudrate) as ser:
+        ser.write(input_bytes)
+        output_bytes = ser.read(size=16)
+
+    return output_bytes
+
+if __name__ == "__main__":
+
+    input_data = "000102030405060708090a0b0c0d0e0f"          #16 bytes, hexadecimal form
+    
+    try:
+        if len(input_data) != 32:
+            print(f'"input_data" length is not 16 bytes')
+            exit() 
+        input_bytes = bytes.fromhex(input_data)
+    except ValueError:
+        print(f'"input_data" value is not a correct hexadecimal form')
+        exit()  
+            
+    output_bytes = main(input_bytes)
+    print("Output:")
+    print("\t", end="")
+    print(output_bytes.hex())
+        
+        
