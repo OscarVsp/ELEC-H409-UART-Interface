@@ -106,9 +106,10 @@ def main(input_bytes: bytes, key_bytes : bytes) -> bytes:
     else:
         print(f"Default baudrate is not set.")
         baudrate = baudrate_menu()
-    print("\n")
-
-    
+    print("")
+    print(f"Sending input data: \t{input_bytes.hex()}")
+    print(f"Sending input key: \t{key_bytes.hex()}")
+    print("")
 
     with serial.Serial(port, baudrate) as ser:
         ser.write(input_bytes)
@@ -119,8 +120,18 @@ def main(input_bytes: bytes, key_bytes : bytes) -> bytes:
 
 if __name__ == "__main__":
 
+
+
+    #######################
+    # VARIABLES TO CHANGE #
+    #######################
+    
     input_data = "000102030405060708090a0b0c0d0e0f"          #16 bytes, hexadecimal form
-    key = "000102030405060708090a0b0c0d0e0f"                  #16 bytes, hexadecimal form
+    key = "000102030405060708090a0b0c0d0e0f"                 #16 bytes, hexadecimal form
+    expected_output_data = ""                                #16 bytes, hexadecimal form
+    
+    #######################
+    
     
     try:
         if len(input_data) != 32:
@@ -140,6 +151,14 @@ if __name__ == "__main__":
         exit()
             
     output_bytes = main(input_bytes, key_bytes)
-    print(output_bytes.hex())
+    print(f"Received output data: \t\t{output_bytes.hex()}")
+    print("")
+    print(f"Expected output data: \t\t{expected_output_data}")
+    print("\nTest status: \t",end="")
+    if (expected_output_data == output_bytes.hex()):
+        print("SUCCES")
+    else:
+        print("FAIL")
+        
         
         

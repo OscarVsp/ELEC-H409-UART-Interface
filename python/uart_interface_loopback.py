@@ -117,7 +117,13 @@ def main(input_bytes: bytes) -> bytes:
 
 if __name__ == "__main__":
 
+    #######################
+    # VARIABLES TO CHANGE #
+    #######################
+    
     input_data = "000102030405060708090a0b0c0d0e0f"          #16 bytes, hexadecimal form
+    
+    #######################
     
     try:
         if len(input_data) != 32:
@@ -128,7 +134,7 @@ if __name__ == "__main__":
         print(f'"input_data" value is not a correct hexadecimal form')
         exit()  
     output_bytes = main(input_bytes)
-    print(f"Received data: \t\t{output_bytes.hex()}")
+    print(f"Received output data: \t\t{output_bytes.hex()}")
     print("\nLoopback test status: \t",end="")
     if (input_data == output_bytes.hex()):
         print("SUCCES")
