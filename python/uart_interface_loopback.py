@@ -106,8 +106,9 @@ def main(input_bytes: bytes) -> bytes:
     else:
         print(f"Default baudrate is not set.")
         baudrate = baudrate_menu()
-    print("\n")
-
+    print("")
+    print(f"Sending input data: \t{input_bytes.hex()}")
+    print("")
     with serial.Serial(port, baudrate) as ser:
         ser.write(input_bytes)
         output_bytes = ser.read(size=16)
@@ -126,10 +127,12 @@ if __name__ == "__main__":
     except ValueError:
         print(f'"input_data" value is not a correct hexadecimal form')
         exit()  
-            
     output_bytes = main(input_bytes)
-    print("Output:")
-    print("\t", end="")
-    print(output_bytes.hex())
+    print(f"Received data: \t\t{output_bytes.hex()}")
+    print("\nLoopback test status: \t",end="")
+    if (input_data == output_bytes.hex()):
+        print("SUCCES")
+    else:
+        print("FAIL")
         
         
