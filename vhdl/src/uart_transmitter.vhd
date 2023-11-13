@@ -2,7 +2,7 @@
 -- UART
 -- Implements a universal asynchronous receiver transmitter
 -- Made by: https://github.com/pabennett/uart
--- License: MIT
+-- License: Apache License
 -------------------------------------------------------------------------------
 -- clock
 --      Input clock, must match frequency value given on clock_frequency
